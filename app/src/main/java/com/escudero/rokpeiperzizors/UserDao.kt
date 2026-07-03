@@ -1,21 +1,31 @@
 package com.escudero.rokpeiperzizors
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 
 @Dao
 interface UserDao {
 
-    // Insertar usuario
-    @Insert
+    @Query("SELECT * FROM usuarios WHERE email = :email AND password = :password LIMIT 1")
+    suspend fun login(email: String, password: String): Usuario?
+
+    @Query("SELECT * FROM usuarios WHERE email = :email LIMIT 1")
+    suspend fun getUserByEmail(email: String): Usuario?
+
+    @Query("SELECT * FROM usuarios ORDER BY id DESC")
+    fun getAllUsers(): LiveData<List<Usuario>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(usuario: Usuario)
 
-    // Buscar usuario por correo y contraseña (LOGIN)
-    @Query("SELECT * FROM usuarios WHERE correo = :correo AND password = :password")
-    suspend fun login(correo: String, password: String): Usuario?
+    @Update
+    suspend fun updateUser(usuario: Usuario)
 
-    // ✅ AGREGAR ESTE MÉTODO para verificar si el correo ya existe
-    @Query("SELECT * FROM usuarios WHERE correo = :correo")
-    suspend fun getUserByEmail(correo: String): Usuario?
+    @Delete
+    suspend fun deleteUser(usuario: Usuario)
 }

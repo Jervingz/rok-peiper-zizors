@@ -16,15 +16,15 @@ class RegistroActivity : AppCompatActivity() {
     private lateinit var db: AppDatabase
     private lateinit var userDao: UserDao
 
+    private var usuarioActual: Usuario? = null  // 👈 EDIT MODE
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_registro)
 
-        // Room init
         db = AppDatabase.getDatabase(this)
         userDao = db.userDao()
 
-        // Referencias UI
         val tilNombre = findViewById<TextInputLayout>(R.id.tilNombre)
         val etNombre = findViewById<TextInputEditText>(R.id.etNombre)
 
@@ -34,123 +34,65 @@ class RegistroActivity : AppCompatActivity() {
         val tilPassword = findViewById<TextInputLayout>(R.id.tilPassword)
         val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
 
-        val tilConfirmPassword = findViewById<TextInputLayout>(R.id.tilConfirmPassword)
-        val etConfirmPassword = findViewById<TextInputEditText>(R.id.etConfirmPassword)
+        val tilConfirm = findViewById<TextInputLayout>(R.id.tilConfirmPassword)
+        val etConfirm = findViewById<TextInputEditText>(R.id.etConfirmPassword)
 
-        val btnRegistrar = findViewById<MaterialButton>(R.id.btnRegistrar)
-        val tvLogin = findViewById<TextView>(R.id.tvLogin)
+        val btn = findViewById<MaterialButton>(R.id.btnRegistrar)
 
-        // Botón Registrar
-        btnRegistrar.setOnClickListener {
+        // 🔥 RECIBIR USUARIO (EDIT MODE)
+        usuarioActual = intent.getSerializableExtra("usuario") as? Usuario
+
+        // 🔥 SI VIENE USUARIO → CARGAR DATOS
+        usuarioActual?.let {
+            etNombre.setText(it.nombre)
+            etEmail.setText(it.email)
+            etPassword.setText(it.password)
+            etConfirm.setText(it.password)
+        }
+
+        btn.setOnClickListener {
+
             val nombre = etNombre.text.toString().trim()
             val email = etEmail.text.toString().trim()
             val password = etPassword.text.toString().trim()
-            val confirmPassword = etConfirmPassword.text.toString().trim()
+            val confirm = etConfirm.text.toString().trim()
 
-            // Validar
-            if (!validateInputs(tilNombre, nombre, tilEmail, email, tilPassword, password, tilConfirmPassword, confirmPassword)) {
+            if (nombre.isEmpty() || email.isEmpty() || password != confirm) {
+                Toast.makeText(this, "Datos inválidos", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // Verificar si el usuario ya existe
             lifecycleScope.launch {
-                val existingUser = userDao.getUserByEmail(email)
-                if (existingUser != null) {
-                    Toast.makeText(
-                        this@RegistroActivity,
-                        "Este correo ya está registrado",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return@launch
+
+                // 🔥 SI EXISTE USUARIO → UPDATE
+                if (usuarioActual != null) {
+
+                    val actualizado = usuarioActual!!.copy(
+                        nombre = nombre,
+                        email = email,
+                        password = password
+                    )
+
+                    userDao.updateUser(actualizado)
+
+                    Toast.makeText(this@RegistroActivity, "Usuario actualizado", Toast.LENGTH_SHORT).show()
+
+                } else {
+
+                    // 🔥 CREATE
+                    val nuevo = Usuario(
+                        nombre = nombre,
+                        email = email,
+                        password = password
+                    )
+
+                    userDao.insertUser(nuevo)
+
+                    Toast.makeText(this@RegistroActivity, "Usuario creado", Toast.LENGTH_SHORT).show()
                 }
 
-                // Crear usuario
-                val nuevoUsuario = Usuario(
-                    nombre = nombre,
-                    correo = email,
-                    password = password
-                )
-
-                try {
-                    userDao.insertUser(nuevoUsuario)
-                    Toast.makeText(
-                        this@RegistroActivity,
-                        "¡Registro exitoso! Inicia sesión",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    finish() // Volver al Login
-                } catch (e: Exception) {
-                    Toast.makeText(
-                        this@RegistroActivity,
-                        "Error al registrar: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+                finish()
             }
         }
-
-        // Ir a Login
-        tvLogin.setOnClickListener {
-            finish() // Volver al Login
-        }
-    }
-
-    private fun validateInputs(
-        tilNombre: TextInputLayout,
-        nombre: String,
-        tilEmail: TextInputLayout,
-        email: String,
-        tilPassword: TextInputLayout,
-        password: String,
-        tilConfirmPassword: TextInputLayout,
-        confirmPassword: String
-    ): Boolean {
-        var isValid = true
-
-        // Validar Nombre
-        if (nombre.isEmpty()) {
-            tilNombre.error = "El nombre es obligatorio"
-            isValid = false
-        } else if (nombre.length < 3) {
-            tilNombre.error = "Mínimo 3 caracteres"
-            isValid = false
-        } else {
-            tilNombre.error = null
-        }
-
-        // Validar Email
-        if (email.isEmpty()) {
-            tilEmail.error = "El correo es obligatorio"
-            isValid = false
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            tilEmail.error = "Correo inválido"
-            isValid = false
-        } else {
-            tilEmail.error = null
-        }
-
-        // Validar Password
-        if (password.isEmpty()) {
-            tilPassword.error = "La contraseña es obligatoria"
-            isValid = false
-        } else if (password.length < 6) {
-            tilPassword.error = "Mínimo 6 caracteres"
-            isValid = false
-        } else {
-            tilPassword.error = null
-        }
-
-        // Validar Confirmar Password
-        if (confirmPassword.isEmpty()) {
-            tilConfirmPassword.error = "Confirma tu contraseña"
-            isValid = false
-        } else if (password != confirmPassword) {
-            tilConfirmPassword.error = "Las contraseñas no coinciden"
-            isValid = false
-        } else {
-            tilConfirmPassword.error = null
-        }
-
-        return isValid
     }
 }

@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [Usuario::class],
-    version = 1,
+    version = 3, // 🔥 SUBE VERSION OBLIGATORIO
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,7 +24,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "rokpeiper_db"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration() // 🔥 BORRA DB VIEJA
+                    .build()
 
                 INSTANCE = instance
                 instance

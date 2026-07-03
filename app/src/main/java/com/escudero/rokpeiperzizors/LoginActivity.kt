@@ -11,8 +11,14 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
-
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 class LoginActivity : AppCompatActivity() {
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     private lateinit var db: AppDatabase
     private lateinit var userDao: UserDao
@@ -21,11 +27,25 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        // Room init
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+
+                requestPermissionLauncher.launch(
+                    Manifest.permission.POST_NOTIFICATIONS
+                )
+            }
+        }
+
+        // 🔹 Inicializar Room
         db = AppDatabase.getDatabase(this)
         userDao = db.userDao()
 
-        // Referencias UI
+        // 🔹 Referencias UI
         val tilEmail = findViewById<TextInputLayout>(R.id.tilCorreo)
         val etEmail = findViewById<TextInputEditText>(R.id.etCorreo)
 
@@ -33,44 +53,72 @@ class LoginActivity : AppCompatActivity() {
         val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
 
         val btnLogin = findViewById<MaterialButton>(R.id.btnIngresar)
-        val tvRegistro = findViewById<TextView>(R.id.tvRegistro) // ✅ Agregar referencia
+        val tvRegistro = findViewById<TextView>(R.id.tvRegistro)
 
-        // ✅ Ir a Registro
+        // ✅ Ir a REGISTRO (CORREGIDO)
         tvRegistro.setOnClickListener {
             startActivity(Intent(this, RegistroActivity::class.java))
         }
 
-        // Botón login
+        // ✅ BOTÓN LOGIN
         btnLogin.setOnClickListener {
 
             val email = etEmail.text.toString().trim()
             val password = etPassword.text.toString().trim()
 
+            // Validar inputs
             if (!validateInputs(tilEmail, email, tilPassword, password)) {
                 return@setOnClickListener
             }
 
+            // 🔹 Login con Room
             lifecycleScope.launch {
-                val user = userDao.login(email, password)
+                try {
+                    val user = userDao.login(email, password)
 
-                if (user != null) {
+                    if (user != null) {
+
+                        // 🔥 PROGRAMAR NOTIFICACIÓN
+                        val work = androidx.work.OneTimeWorkRequestBuilder<SimpleReminderWorker>()
+                            .setInitialDelay(10, java.util.concurrent.TimeUnit.SECONDS)
+                            .build()
+
+                        androidx.work.WorkManager.getInstance(this@LoginActivity)
+                            .enqueue(work)
+
+                        Toast.makeText(
+                            this@LoginActivity,
+                            "Bienvenido ${user.nombre}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        startActivity(
+                            Intent(this@LoginActivity, ListaUsuariosActivity::class.java)
+                        )
+                        finish()
+
+                    } else {
+                        Toast.makeText(
+                            this@LoginActivity,
+                            "Credenciales incorrectas",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                } catch (e: Exception) {
+                    e.printStackTrace()
+
                     Toast.makeText(
                         this@LoginActivity,
-                        "Bienvenido ${user.nombre}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    // startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
-                } else {
-                    Toast.makeText(
-                        this@LoginActivity,
-                        "Credenciales incorrectas",
-                        Toast.LENGTH_SHORT
+                        "Error: ${e.message}",
+                        Toast.LENGTH_LONG
                     ).show()
                 }
             }
         }
     }
 
+    // 🔹 VALIDACIONES
     private fun validateInputs(
         tilEmail: TextInputLayout,
         email: String,
