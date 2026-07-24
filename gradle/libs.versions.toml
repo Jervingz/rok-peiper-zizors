@@ -12,6 +12,9 @@ appcompat = "1.7.1"
 material = "1.14.0"
 activity = "1.13.0"
 constraintlayout = "2.2.1"
+junitJunit = "4.12"
+runner = "1.6.1"
+coreKtxVersion = "1.7.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,6 +35,9 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+junit-junit = { group = "junit", name = "junit", version.ref = "junitJunit" }
+androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
+core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "coreKtxVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

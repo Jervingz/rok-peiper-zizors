@@ -1,0 +1,1331 @@
+Index: app/src/main/java/com/escudero/rokpeiperzizors/MainActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.escudero.rokpeiperzizors\r\n\r\nimport android.app.NotificationChannel\r\nimport android.app.NotificationManager\r\nimport android.content.Intent\r\nimport android.os.Build\r\nimport android.os.Bundle\r\nimport androidx.activity.ComponentActivity\r\n\r\nclass MainActivity : ComponentActivity() {\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n\r\n        createNotificationChannel()\r\n\r\n        startActivity(Intent(this, LoginActivity::class.java))\r\n        finish()\r\n    }\r\n\r\n    private fun createNotificationChannel() {\r\n\r\n        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {\r\n\r\n            val channel = NotificationChannel(\r\n                \"game_channel\",\r\n                \"Recordatorio de juego\",\r\n                NotificationManager.IMPORTANCE_HIGH\r\n            ).apply {\r\n                description = \"Te recuerda volver a jugar\"\r\n            }\r\n\r\n            val manager = getSystemService(NotificationManager::class.java)\r\n            manager.createNotificationChannel(channel)\r\n        }\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/escudero/rokpeiperzizors/MainActivity.kt b/app/src/main/java/com/escudero/rokpeiperzizors/MainActivity.kt
+--- a/app/src/main/java/com/escudero/rokpeiperzizors/MainActivity.kt	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/app/src/main/java/com/escudero/rokpeiperzizors/MainActivity.kt	(date 1783667220714)
+@@ -1,37 +1,47 @@
+ package com.escudero.rokpeiperzizors
+ 
+-import android.app.NotificationChannel
+-import android.app.NotificationManager
+ import android.content.Intent
+-import android.os.Build
+ import android.os.Bundle
+-import androidx.activity.ComponentActivity
++import android.widget.Button
++import android.widget.TextView
++import androidx.activity.result.contract.ActivityResultContracts
++import androidx.appcompat.app.AppCompatActivity
++
++class MainActivity : AppCompatActivity() {
+ 
+-class MainActivity : ComponentActivity() {
++    private lateinit var tvResumen: TextView
++    private lateinit var btnJugar: Button
++    private var ultimoMarcador: String = "Aún no has jugado"
++
++    private val launchJuego = registerForActivityResult(
++        ActivityResultContracts.StartActivityForResult()
++    ) { result ->
++        if (result.resultCode == RESULT_OK) {
++            val data = result.data
++            val ganadas = data?.getIntExtra("ganadas", 0) ?: 0
++            val perdidas = data?.getIntExtra("perdidas", 0) ?: 0
++            val empatadas = data?.getIntExtra("empatadas", 0) ?: 0
++            ultimoMarcador = "🟢 Ganaste $ganadas | 🔴 Perdiste $perdidas | 🟡 Empataste $empatadas"
++            tvResumen.text = ultimoMarcador
++        }
++    }
+ 
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
++        setContentView(R.layout.activity_main)
+ 
+-        createNotificationChannel()
++        tvResumen = findViewById(R.id.tvResumen)
++        btnJugar = findViewById(R.id.btnJugar)
++        tvResumen.text = ultimoMarcador
+ 
+-        startActivity(Intent(this, LoginActivity::class.java))
+-        finish()
+-    }
+-
+-    private fun createNotificationChannel() {
+-
+-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+-
+-            val channel = NotificationChannel(
+-                "game_channel",
+-                "Recordatorio de juego",
+-                NotificationManager.IMPORTANCE_HIGH
+-            ).apply {
+-                description = "Te recuerda volver a jugar"
+-            }
++        btnJugar.setOnClickListener {
++            val intent = Intent(this, JuegoActivity::class.java)
++            launchJuego.launch(intent)
++        }
++    }
+ 
+-            val manager = getSystemService(NotificationManager::class.java)
+-            manager.createNotificationChannel(channel)
+-        }
++    override fun onBackPressed() {
++        super.onBackPressed()
++        finishAffinity()
+     }
+ }
+\ No newline at end of file
+Index: app/src/main/res/layout/activity_login.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<androidx.constraintlayout.widget.ConstraintLayout\r\n    android:id=\"@+id/main\"\r\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\r\n    xmlns:tools=\"http://schemas.android.com/tools\"\r\n    android:layout_width=\"match_parent\"\r\n    android:layout_height=\"match_parent\"\r\n    android:background=\"#121212\"\r\n    tools:context=\".LoginActivity\">\r\n\r\n    <!-- Nombre / Logo de la app -->\r\n    <TextView\r\n        android:id=\"@+id/tvTitulo\"\r\n        android:layout_width=\"wrap_content\"\r\n        android:layout_height=\"wrap_content\"\r\n        android:text=\"RokPeiperZizors\"\r\n        android:textColor=\"#00B4D8\"\r\n        android:textSize=\"32sp\"\r\n        android:textStyle=\"bold\"\r\n        app:layout_constraintTop_toTopOf=\"parent\"\r\n        app:layout_constraintBottom_toTopOf=\"@+id/tilCorreo\"\r\n        app:layout_constraintStart_toStartOf=\"parent\"\r\n        app:layout_constraintEnd_toEndOf=\"parent\"\r\n        android:layout_marginTop=\"80dp\"/>\r\n\r\n    <!-- Campo correo -->\r\n    <com.google.android.material.textfield.TextInputLayout\r\n        android:id=\"@+id/tilCorreo\"\r\n        style=\"@style/Widget.Material3.TextInputLayout.OutlinedBox\"\r\n        android:layout_width=\"0dp\"\r\n        android:layout_height=\"wrap_content\"\r\n        android:hint=\"Correo electrónico\"\r\n        app:boxStrokeColor=\"#00B4D8\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/tvTitulo\"\r\n        app:layout_constraintStart_toStartOf=\"parent\"\r\n        app:layout_constraintEnd_toEndOf=\"parent\"\r\n        android:layout_marginHorizontal=\"32dp\"\r\n        android:layout_marginTop=\"40dp\">\r\n\r\n        <com.google.android.material.textfield.TextInputEditText\r\n            android:id=\"@+id/etCorreo\"\r\n            android:layout_width=\"match_parent\"\r\n            android:layout_height=\"wrap_content\"\r\n            android:inputType=\"textEmailAddress\"\r\n            android:textColor=\"#FFFFFF\"/>\r\n    </com.google.android.material.textfield.TextInputLayout>\r\n\r\n    <!-- Campo contraseña -->\r\n    <com.google.android.material.textfield.TextInputLayout\r\n        android:id=\"@+id/tilPassword\"\r\n        style=\"@style/Widget.Material3.TextInputLayout.OutlinedBox\"\r\n        android:layout_width=\"0dp\"\r\n        android:layout_height=\"wrap_content\"\r\n        android:hint=\"Contraseña\"\r\n        app:boxStrokeColor=\"#00B4D8\"\r\n        app:endIconMode=\"password_toggle\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/tilCorreo\"\r\n        app:layout_constraintStart_toStartOf=\"parent\"\r\n        app:layout_constraintEnd_toEndOf=\"parent\"\r\n        android:layout_marginHorizontal=\"32dp\"\r\n        android:layout_marginTop=\"20dp\">\r\n\r\n        <com.google.android.material.textfield.TextInputEditText\r\n            android:id=\"@+id/etPassword\"\r\n            android:layout_width=\"match_parent\"\r\n            android:layout_height=\"wrap_content\"\r\n            android:inputType=\"textPassword\"\r\n            android:textColor=\"#FFFFFF\"/>\r\n    </com.google.android.material.textfield.TextInputLayout>\r\n\r\n    <!-- Botón ingresar -->\r\n    <com.google.android.material.button.MaterialButton\r\n        android:id=\"@+id/btnIngresar\"\r\n        android:layout_width=\"0dp\"\r\n        android:layout_height=\"wrap_content\"\r\n        android:text=\"Ingresar\"\r\n        android:textColor=\"#FFFFFF\"\r\n        android:backgroundTint=\"#FF6D00\"\r\n        app:cornerRadius=\"12dp\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/tilPassword\"\r\n        app:layout_constraintStart_toStartOf=\"parent\"\r\n        app:layout_constraintEnd_toEndOf=\"parent\"\r\n        android:layout_marginHorizontal=\"32dp\"\r\n        android:layout_marginTop=\"30dp\"/>\r\n\r\n    <!-- Link a registro -->\r\n    <TextView\r\n        android:id=\"@+id/tvRegistro\"\r\n        android:layout_width=\"wrap_content\"\r\n        android:layout_height=\"wrap_content\"\r\n        android:text=\"¿No tienes cuenta? Regístrate\"\r\n        android:textColor=\"#00B4D8\"\r\n        android:textSize=\"14sp\"\r\n        android:textStyle=\"bold\"\r\n        app:layout_constraintTop_toBottomOf=\"@id/btnIngresar\"\r\n        app:layout_constraintStart_toStartOf=\"parent\"\r\n        app:layout_constraintEnd_toEndOf=\"parent\"\r\n        android:layout_marginTop=\"20dp\"/>\r\n\r\n</androidx.constraintlayout.widget.ConstraintLayout>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/activity_login.xml b/app/src/main/res/layout/activity_login.xml
+--- a/app/src/main/res/layout/activity_login.xml	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/app/src/main/res/layout/activity_login.xml	(date 1783667547994)
+@@ -1,7 +1,5 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<androidx.constraintlayout.widget.ConstraintLayout
+-    android:id="@+id/main"
+-    xmlns:android="http://schemas.android.com/apk/res/android"
++<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:app="http://schemas.android.com/apk/res-auto"
+     xmlns:tools="http://schemas.android.com/tools"
+     android:layout_width="match_parent"
+@@ -9,7 +7,7 @@
+     android:background="#121212"
+     tools:context=".LoginActivity">
+ 
+-    <!-- Nombre / Logo de la app -->
++    <!-- Título -->
+     <TextView
+         android:id="@+id/tvTitulo"
+         android:layout_width="wrap_content"
+@@ -19,7 +17,6 @@
+         android:textSize="32sp"
+         android:textStyle="bold"
+         app:layout_constraintTop_toTopOf="parent"
+-        app:layout_constraintBottom_toTopOf="@+id/tilCorreo"
+         app:layout_constraintStart_toStartOf="parent"
+         app:layout_constraintEnd_toEndOf="parent"
+         android:layout_marginTop="80dp"/>
+Index: app/src/main/res/drawable/ic_launcher_background.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    android:width=\"108dp\"\r\n    android:height=\"108dp\"\r\n    android:viewportWidth=\"108\"\r\n    android:viewportHeight=\"108\">\r\n    <path\r\n        android:fillColor=\"#3DDC84\"\r\n        android:pathData=\"M0,0h108v108h-108z\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M9,0L9,108\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M19,0L19,108\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M29,0L29,108\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M39,0L39,108\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M49,0L49,108\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M59,0L59,108\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M69,0L69,108\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M79,0L79,108\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M89,0L89,108\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M99,0L99,108\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M0,9L108,9\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M0,19L108,19\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M0,29L108,29\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M0,39L108,39\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M0,49L108,49\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M0,59L108,59\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M0,69L108,69\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M0,79L108,79\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M0,89L108,89\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M0,99L108,99\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M19,29L89,29\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M19,39L89,39\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M19,49L89,49\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M19,59L89,59\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M19,69L89,69\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M19,79L89,79\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M29,19L29,89\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M39,19L39,89\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M49,19L49,89\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M59,19L59,89\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M69,19L69,89\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n    <path\r\n        android:fillColor=\"#00000000\"\r\n        android:pathData=\"M79,19L79,89\"\r\n        android:strokeWidth=\"0.8\"\r\n        android:strokeColor=\"#33FFFFFF\" />\r\n</vector>\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/drawable/ic_launcher_background.xml b/app/src/main/res/drawable/ic_launcher_background.xml
+--- a/app/src/main/res/drawable/ic_launcher_background.xml	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/app/src/main/res/drawable/ic_launcher_background.xml	(date 1783796939723)
+@@ -4,167 +4,75 @@
+     android:height="108dp"
+     android:viewportWidth="108"
+     android:viewportHeight="108">
+-    <path
+-        android:fillColor="#3DDC84"
+-        android:pathData="M0,0h108v108h-108z" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M9,0L9,108"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M19,0L19,108"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M29,0L29,108"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M39,0L39,108"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M49,0L49,108"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M59,0L59,108"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M69,0L69,108"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M79,0L79,108"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M89,0L89,108"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M99,0L99,108"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M0,9L108,9"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M0,19L108,19"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M0,29L108,29"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M0,39L108,39"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M0,49L108,49"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M0,59L108,59"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M0,69L108,69"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M0,79L108,79"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M0,89L108,89"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M0,99L108,99"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M19,29L89,29"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M19,39L89,39"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M19,49L89,49"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M19,59L89,59"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M19,69L89,69"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M19,79L89,79"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M29,19L29,89"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M39,19L39,89"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M49,19L49,89"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M59,19L59,89"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M69,19L69,89"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
+-    <path
+-        android:fillColor="#00000000"
+-        android:pathData="M79,19L79,89"
+-        android:strokeWidth="0.8"
+-        android:strokeColor="#33FFFFFF" />
++  <group android:scaleX="0.97"
++      android:scaleY="0.97"
++      android:translateX="1.62"
++      android:translateY="1.62">
++      <path android:fillColor="#3DDC84"
++            android:pathData="M0,0h108v108h-108z"/>
++      <path android:fillColor="#00000000" android:pathData="M9,0L9,108"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M19,0L19,108"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M29,0L29,108"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M39,0L39,108"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M49,0L49,108"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M59,0L59,108"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M69,0L69,108"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M79,0L79,108"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M89,0L89,108"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M99,0L99,108"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M0,9L108,9"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M0,19L108,19"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M0,29L108,29"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M0,39L108,39"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M0,49L108,49"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M0,59L108,59"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M0,69L108,69"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M0,79L108,79"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M0,89L108,89"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M0,99L108,99"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M19,29L89,29"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M19,39L89,39"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M19,49L89,49"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M19,59L89,59"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M19,69L89,69"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M19,79L89,79"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M29,19L29,89"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M39,19L39,89"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M49,19L49,89"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M59,19L59,89"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M69,19L69,89"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++      <path android:fillColor="#00000000" android:pathData="M79,19L79,89"
++            android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
++  </group>
+ </vector>
+Index: build.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\r\n    id(\"com.android.application\") version \"8.13.2\" apply false\r\n    id(\"org.jetbrains.kotlin.android\") version \"2.0.21\" apply false\r\n    id(\"org.jetbrains.kotlin.plugin.compose\") version \"2.0.21\" apply false\r\n}\r\n\r\ntasks.register(\"clean\", Delete::class) {\r\n    delete(rootProject.buildDir)\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/build.gradle.kts b/build.gradle.kts
+--- a/build.gradle.kts	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/build.gradle.kts	(date 1783662073665)
+@@ -1,7 +1,7 @@
+ plugins {
+-    id("com.android.application") version "8.13.2" apply false
+-    id("org.jetbrains.kotlin.android") version "2.0.21" apply false
+-    id("org.jetbrains.kotlin.plugin.compose") version "2.0.21" apply false
++    id("com.android.application") version "9.1.1" apply false
++    id("org.jetbrains.kotlin.android") version "2.2.10" apply false
++    id("org.jetbrains.kotlin.plugin.compose") version "2.2.10" apply false
+ }
+ 
+ tasks.register("clean", Delete::class) {
+Index: app/build.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\r\n    id(\"com.android.application\")\r\n    id(\"org.jetbrains.kotlin.android\")\r\n    id(\"org.jetbrains.kotlin.plugin.compose\")\r\n    id(\"com.google.devtools.ksp\")\r\n}\r\n\r\nandroid {\r\n    namespace = \"com.escudero.rokpeiperzizors\"\r\n    compileSdk = 35\r\n\r\n    defaultConfig {\r\n        applicationId = \"com.escudero.rokpeiperzizors\"\r\n        minSdk = 24\r\n        targetSdk = 35\r\n        versionCode = 1\r\n        versionName = \"1.0\"\r\n\r\n        testInstrumentationRunner = \"androidx.test.runner.AndroidJUnitRunner\"\r\n    }\r\n\r\n    buildTypes {\r\n        release {\r\n            isMinifyEnabled = false\r\n            proguardFiles(\r\n                getDefaultProguardFile(\"proguard-android-optimize.txt\"),\r\n                \"proguard-rules.pro\"\r\n            )\r\n        }\r\n    }\r\n\r\n    compileOptions {\r\n        sourceCompatibility = JavaVersion.VERSION_17\r\n        targetCompatibility = JavaVersion.VERSION_17\r\n    }\r\n\r\n    kotlinOptions {\r\n        jvmTarget = \"17\"\r\n    }\r\n\r\n    buildFeatures {\r\n        compose = true\r\n    }\r\n}\r\n\r\ndependencies {\r\n    // Core\r\n    implementation(\"androidx.core:core-ktx:1.15.0\")\r\n    implementation(\"androidx.appcompat:appcompat:1.7.0\")\r\n    implementation(\"com.google.android.material:material:1.12.0\")\r\n    implementation(\"androidx.constraintlayout:constraintlayout:2.2.0\")\r\n\r\n    // Compose\r\n    val composeBom = platform(\"androidx.compose:compose-bom:2024.12.01\")\r\n    implementation(composeBom)\r\n    implementation(\"androidx.compose.ui:ui\")\r\n    implementation(\"androidx.compose.ui:ui-graphics\")\r\n    implementation(\"androidx.compose.ui:ui-tooling-preview\")\r\n    implementation(\"androidx.compose.material3:material3\")\r\n    implementation(\"androidx.activity:activity-compose:1.9.3\")\r\n\r\n    // Room\r\n    implementation(\"androidx.room:room-runtime:2.7.0\")\r\n    implementation(\"androidx.room:room-ktx:2.7.0\")\r\n    ksp(\"androidx.room:room-compiler:2.7.0\")\r\n    implementation(\"androidx.work:work-runtime-ktx:2.9.0\")\r\n    // Testing\r\n    testImplementation(\"junit:junit:4.13.2\")\r\n    androidTestImplementation(\"androidx.test.ext:junit:1.2.1\")\r\n    androidTestImplementation(\"androidx.test.espresso:espresso-core:3.6.1\")\r\n    androidTestImplementation(platform(\"androidx.compose:compose-bom:2024.12.01\"))\r\n    androidTestImplementation(\"androidx.compose.ui:ui-test-junit4\")\r\n    debugImplementation(\"androidx.compose.ui:ui-tooling\")\r\n    debugImplementation(\"androidx.compose.ui:ui-test-manifest\")\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+--- a/app/build.gradle.kts	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/app/build.gradle.kts	(date 1783664057593)
+@@ -49,6 +49,9 @@
+     implementation("androidx.appcompat:appcompat:1.7.0")
+     implementation("com.google.android.material:material:1.12.0")
+     implementation("androidx.constraintlayout:constraintlayout:2.2.0")
++    implementation(libs.junit.junit)
++    implementation(libs.androidx.runner)
++    implementation(libs.core.ktx)
+ 
+     // Compose
+     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
+@@ -72,4 +75,15 @@
+     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+     debugImplementation("androidx.compose.ui:ui-tooling")
+     debugImplementation("androidx.compose.ui:ui-test-manifest")
++    testImplementation(kotlin("test"))
++
++    androidTestImplementation("androidx.test.ext:junit:1.2.1")
++    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
++
++    androidTestImplementation("androidx.room:room-testing:2.7.0")
++    androidTestImplementation("junit:junit:4.13.2")
++    androidTestImplementation("androidx.test.ext:junit:1.2.1")
++    androidTestImplementation("androidx.test:core:1.6.1")
++    androidTestImplementation("androidx.room:room-testing:2.7.0")
++    androidTestImplementation("androidx.test:core:1.6.1")
+ }
+\ No newline at end of file
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    xmlns:tools=\"http://schemas.android.com/tools\">\r\n    <uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\"/>\r\n    <application\r\n        android:allowBackup=\"true\"\r\n        android:dataExtractionRules=\"@xml/data_extraction_rules\"\r\n        android:fullBackupContent=\"@xml/backup_rules\"\r\n        android:icon=\"@mipmap/ic_launcher\"\r\n        android:label=\"@string/app_name\"\r\n        android:roundIcon=\"@mipmap/ic_launcher_round\"\r\n        android:supportsRtl=\"true\"\r\n        android:theme=\"@style/Theme.RokPeiperZizors\"\r\n        tools:targetApi=\"31\">\r\n\r\n        <!-- MAIN (abre primero) -->\r\n        <activity\r\n            android:name=\".MainActivity\"\r\n            android:exported=\"true\"\r\n            android:theme=\"@style/Theme.RokPeiperZizors\">\r\n            <intent-filter>\r\n                <action android:name=\"android.intent.action.MAIN\" />\r\n                <category android:name=\"android.intent.category.LAUNCHER\" />\r\n            </intent-filter>\r\n        </activity>\r\n\r\n        <!-- LOGIN -->\r\n        <activity\r\n            android:name=\".LoginActivity\"\r\n            android:exported=\"false\"\r\n            android:theme=\"@style/Theme.RokPeiperZizors\" />\r\n\r\n        <!-- REGISTRO -->\r\n        <activity\r\n            android:name=\".RegistroActivity\"\r\n            android:exported=\"false\"\r\n            android:theme=\"@style/Theme.RokPeiperZizors\" />\r\n\r\n        <!-- ✅ ESTA ERA LA QUE FALTABA -->\r\n        <activity\r\n            android:name=\".ListaUsuariosActivity\"\r\n            android:exported=\"false\"\r\n            android:theme=\"@style/Theme.RokPeiperZizors\" />\r\n\r\n    </application>\r\n\r\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+--- a/app/src/main/AndroidManifest.xml	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/app/src/main/AndroidManifest.xml	(date 1783667879890)
+@@ -3,45 +3,43 @@
+     xmlns:tools="http://schemas.android.com/tools">
+     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+     <application
+-        android:allowBackup="true"
+-        android:dataExtractionRules="@xml/data_extraction_rules"
+-        android:fullBackupContent="@xml/backup_rules"
+-        android:icon="@mipmap/ic_launcher"
+-        android:label="@string/app_name"
+-        android:roundIcon="@mipmap/ic_launcher_round"
+-        android:supportsRtl="true"
+-        android:theme="@style/Theme.RokPeiperZizors"
+-        tools:targetApi="31">
++
++    tools:targetApi="31">
++        <activity
++            android:name=".JuegoActivity"
++            android:exported="false"
++            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+ 
+-        <!-- MAIN (abre primero) -->
+-        <activity
+-            android:name=".MainActivity"
+-            android:exported="true"
+-            android:theme="@style/Theme.RokPeiperZizors">
+-            <intent-filter>
+-                <action android:name="android.intent.action.MAIN" />
+-                <category android:name="android.intent.category.LAUNCHER" />
+-            </intent-filter>
+-        </activity>
++
++    <!-- MAIN (abre primero) - THIS COMMENT IS WRONG, IT POINTS TO LOGIN -->
++    <activity
++        android:name=".LoginActivity"
++        android:exported="true"
++        android:theme="@style/Theme.RokPeiperZizors">
++        <intent-filter>
++            <action android:name="android.intent.action.MAIN" />
++            <category android:name="android.intent.category.LAUNCHER" />
++        </intent-filter>
++    </activity>
+ 
+-        <!-- LOGIN -->
+-        <activity
+-            android:name=".LoginActivity"
+-            android:exported="false"
+-            android:theme="@style/Theme.RokPeiperZizors" />
++    <!-- LOGIN - THIS COMMENT IS WRONG, IT POINTS TO MAIN -->
++    <activity
++        android:name=".MainActivity"
++        android:exported="false"
++        android:theme="@style/Theme.RokPeiperZizors" />
+ 
+-        <!-- REGISTRO -->
+-        <activity
+-            android:name=".RegistroActivity"
+-            android:exported="false"
+-            android:theme="@style/Theme.RokPeiperZizors" />
++    <!-- REGISTRO -->
++    <activity
++        android:name=".RegistroActivity"
++        android:exported="false"
++        android:theme="@style/Theme.RokPeiperZizors" />
+ 
+-        <!-- ✅ ESTA ERA LA QUE FALTABA -->
+-        <activity
+-            android:name=".ListaUsuariosActivity"
+-            android:exported="false"
+-            android:theme="@style/Theme.RokPeiperZizors" />
++    <!-- ✅ ESTA ERA LA QUE FALTABA -->
++    <activity
++        android:name=".ListaUsuariosActivity"
++        android:exported="false"
++        android:theme="@style/Theme.RokPeiperZizors" />
+ 
+-    </application>
++</application>
+ 
+-</manifest>
+\ No newline at end of file
++    </manifest>
+\ No newline at end of file
+Index: settings.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>pluginManagement {\r\n    repositories {\r\n        google()\r\n        mavenCentral()\r\n        gradlePluginPortal()\r\n    }\r\n    plugins {\r\n        id(\"com.google.devtools.ksp\") version \"2.0.21-1.0.27\"\r\n    }\r\n}\r\n\r\ndependencyResolutionManagement {\r\n    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)\r\n    repositories {\r\n        google()\r\n        mavenCentral()\r\n    }\r\n}\r\n\r\nrootProject.name = \"RokPeiperZizors2\"\r\ninclude(\":app\")
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/settings.gradle.kts b/settings.gradle.kts
+--- a/settings.gradle.kts	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/settings.gradle.kts	(date 1783662073536)
+@@ -5,7 +5,7 @@
+         gradlePluginPortal()
+     }
+     plugins {
+-        id("com.google.devtools.ksp") version "2.0.21-1.0.27"
++        id("com.google.devtools.ksp") version "2.3.2"
+     }
+ }
+ 
+Index: gradle/libs.versions.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>[versions]\r\nagp = \"9.1.1\"\r\ncoreKtx = \"1.19.0\"\r\njunit = \"4.13.2\"\r\njunitVersion = \"1.3.0\"\r\nespressoCore = \"3.7.0\"\r\nlifecycleRuntimeKtx = \"2.10.0\"\r\nactivityCompose = \"1.13.0\"\r\nkotlin = \"2.2.10\"\r\ncomposeBom = \"2026.02.01\"\r\nappcompat = \"1.7.1\"\r\nmaterial = \"1.14.0\"\r\nactivity = \"1.13.0\"\r\nconstraintlayout = \"2.2.1\"\r\n\r\n[libraries]\r\nandroidx-core-ktx = { group = \"androidx.core\", name = \"core-ktx\", version.ref = \"coreKtx\" }\r\njunit = { group = \"junit\", name = \"junit\", version.ref = \"junit\" }\r\nandroidx-junit = { group = \"androidx.test.ext\", name = \"junit\", version.ref = \"junitVersion\" }\r\nandroidx-espresso-core = { group = \"androidx.test.espresso\", name = \"espresso-core\", version.ref = \"espressoCore\" }\r\nandroidx-lifecycle-runtime-ktx = { group = \"androidx.lifecycle\", name = \"lifecycle-runtime-ktx\", version.ref = \"lifecycleRuntimeKtx\" }\r\nandroidx-activity-compose = { group = \"androidx.activity\", name = \"activity-compose\", version.ref = \"activityCompose\" }\r\nandroidx-compose-bom = { group = \"androidx.compose\", name = \"compose-bom\", version.ref = \"composeBom\" }\r\nandroidx-compose-ui = { group = \"androidx.compose.ui\", name = \"ui\" }\r\nandroidx-compose-ui-graphics = { group = \"androidx.compose.ui\", name = \"ui-graphics\" }\r\nandroidx-compose-ui-tooling = { group = \"androidx.compose.ui\", name = \"ui-tooling\" }\r\nandroidx-compose-ui-tooling-preview = { group = \"androidx.compose.ui\", name = \"ui-tooling-preview\" }\r\nandroidx-compose-ui-test-manifest = { group = \"androidx.compose.ui\", name = \"ui-test-manifest\" }\r\nandroidx-compose-ui-test-junit4 = { group = \"androidx.compose.ui\", name = \"ui-test-junit4\" }\r\nandroidx-compose-material3 = { group = \"androidx.compose.material3\", name = \"material3\" }\r\nandroidx-appcompat = { group = \"androidx.appcompat\", name = \"appcompat\", version.ref = \"appcompat\" }\r\nmaterial = { group = \"com.google.android.material\", name = \"material\", version.ref = \"material\" }\r\nandroidx-activity = { group = \"androidx.activity\", name = \"activity\", version.ref = \"activity\" }\r\nandroidx-constraintlayout = { group = \"androidx.constraintlayout\", name = \"constraintlayout\", version.ref = \"constraintlayout\" }\r\n\r\n[plugins]\r\nandroid-application = { id = \"com.android.application\", version.ref = \"agp\" }\r\nkotlin-compose = { id = \"org.jetbrains.kotlin.plugin.compose\", version.ref = \"kotlin\" }\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+--- a/gradle/libs.versions.toml	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/gradle/libs.versions.toml	(date 1783662500274)
+@@ -12,6 +12,9 @@
+ material = "1.14.0"
+ activity = "1.13.0"
+ constraintlayout = "2.2.1"
++junitJunit = "4.12"
++runner = "1.6.1"
++coreKtxVersion = "1.7.0"
+ 
+ [libraries]
+ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+@@ -32,6 +35,9 @@
+ material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+ androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
++junit-junit = { group = "junit", name = "junit", version.ref = "junitJunit" }
++androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
++core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "coreKtxVersion" }
+ 
+ [plugins]
+ android-application = { id = "com.android.application", version.ref = "agp" }
+Index: app/src/main/res/layout/activity_juego.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/activity_juego.xml b/app/src/main/res/layout/activity_juego.xml
+new file mode 100644
+--- /dev/null	(date 1783666712292)
++++ b/app/src/main/res/layout/activity_juego.xml	(date 1783666712292)
+@@ -0,0 +1,105 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:orientation="vertical"
++    android:gravity="center"
++    android:padding="20dp"
++    android:background="#1A1A1A">
++
++    <TextView
++        android:id="@+id/tvMarcador"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:text="Jugador 0 - 0 Máquina"
++        android:textSize="28sp"
++        android:textColor="#FFFFFF"
++        android:textStyle="bold"
++        android:layout_marginBottom="16dp"/>
++
++    <TextView
++        android:id="@+id/tvAyuda"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:text="👆 Toca una opción para jugar"
++        android:textSize="18sp"
++        android:textColor="#AAAAAA"
++        android:layout_marginBottom="20dp"/>
++
++    <TextView
++        android:id="@+id/tvResultado"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:text="Elige una opción"
++        android:textSize="28sp"
++        android:textColor="#FFFFFF"
++        android:gravity="center"
++        android:layout_marginBottom="30dp"/>
++
++    <LinearLayout
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:orientation="horizontal"
++        android:gravity="center"
++        android:weightSum="3">
++
++        <Button
++            android:id="@+id/btnPiedra"
++            android:layout_width="0dp"
++            android:layout_height="100dp"
++            android:layout_weight="1"
++            android:text="🪨"
++            android:textSize="50sp"
++            android:backgroundTint="#333333"
++            android:textColor="#FFFFFF"
++            android:layout_margin="8dp"/>
++
++        <Button
++            android:id="@+id/btnPapel"
++            android:layout_width="0dp"
++            android:layout_height="100dp"
++            android:layout_weight="1"
++            android:text="📄"
++            android:textSize="50sp"
++            android:backgroundTint="#333333"
++            android:textColor="#FFFFFF"
++            android:layout_margin="8dp"/>
++
++        <Button
++            android:id="@+id/btnTijera"
++            android:layout_width="0dp"
++            android:layout_height="100dp"
++            android:layout_weight="1"
++            android:text="✂️"
++            android:textSize="50sp"
++            android:backgroundTint="#333333"
++            android:textColor="#FFFFFF"
++            android:layout_margin="8dp"/>
++    </LinearLayout>
++
++    <LinearLayout
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:orientation="horizontal"
++        android:gravity="center"
++        android:layout_marginTop="30dp">
++
++        <Button
++            android:id="@+id/btnReiniciar"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:text="🔄 Reiniciar"
++            android:backgroundTint="#FF6D00"
++            android:textColor="#FFFFFF"
++            android:layout_marginEnd="16dp"/>
++
++        <Button
++            android:id="@+id/btnVolver"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:text="⬅ Volver"
++            android:backgroundTint="#00B4D8"
++            android:textColor="#FFFFFF"/>
++    </LinearLayout>
++
++</LinearLayout>
+\ No newline at end of file
+Index: app/src/main/res/layout/activity_main.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/layout/activity_main.xml b/app/src/main/res/layout/activity_main.xml
+new file mode 100644
+--- /dev/null	(date 1783666681155)
++++ b/app/src/main/res/layout/activity_main.xml	(date 1783666681155)
+@@ -0,0 +1,40 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:orientation="vertical"
++    android:gravity="center"
++    android:padding="30dp"
++    android:background="#121212">
++
++    <!-- Título de la app -->
++    <TextView
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:text="🎮 Rok Peiper Zizors"
++        android:textSize="34sp"
++        android:textColor="#00B4D8"
++        android:textStyle="bold"
++        android:layout_marginBottom="40dp"/>
++
++    <!-- Resumen de la última partida -->
++    <TextView
++        android:id="@+id/tvResumen"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:text="Aún no has jugado"
++        android:textSize="22sp"
++        android:textColor="#FFFFFF"
++        android:layout_marginBottom="30dp"/>
++
++    <!-- Botón Jugar -->
++    <Button
++        android:id="@+id/btnJugar"
++        android:layout_width="200dp"
++        android:layout_height="70dp"
++        android:text="🎯 Jugar"
++        android:textSize="24sp"
++        android:backgroundTint="#FF6D00"
++        android:textColor="#FFFFFF"/>
++
++</LinearLayout>
+\ No newline at end of file
+Index: gradle.properties
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># AndroidX\r\nandroid.useAndroidX=true\r\nandroid.enableJetifier=true\r\n\r\n# Gradle\r\norg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m\r\norg.gradle.parallel=true\r\norg.gradle.caching=true\r\norg.gradle.daemon=true\r\n\r\n# Kotlin\r\nkotlin.code.style=official\r\n\r\n# Compose\r\nandroid.suppressUnsupportedCompileSdk=34\r\n\r\n# KSP\r\nksp.incremental=true
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>ISO-8859-1
+===================================================================
+diff --git a/gradle.properties b/gradle.properties
+--- a/gradle.properties	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/gradle.properties	(date 1783662073724)
+@@ -15,4 +15,14 @@
+ android.suppressUnsupportedCompileSdk=34
+ 
+ # KSP
+-ksp.incremental=true
+\ No newline at end of file
++ksp.incremental=true
++android.defaults.buildfeatures.resvalues=true
++android.sdk.defaultTargetSdkToCompileSdkIfUnset=false
++android.enableAppCompileTimeRClass=false
++android.usesSdkInManifest.disallowed=false
++android.uniquePackageNames=false
++android.dependency.useConstraints=true
++android.r8.strictFullModeForKeepRules=false
++android.r8.optimizedResourceShrinking=false
++android.builtInKotlin=false
++android.newDsl=false
+\ No newline at end of file
+Index: .idea/deploymentTargetSelector.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"deploymentTargetSelector\">\r\n    <selectionStates>\r\n      <SelectionState runConfigName=\"app\">\r\n        <option name=\"selectionMode\" value=\"DROPDOWN\" />\r\n        <DialogSelection />\r\n      </SelectionState>\r\n    </selectionStates>\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/deploymentTargetSelector.xml b/.idea/deploymentTargetSelector.xml
+--- a/.idea/deploymentTargetSelector.xml	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/.idea/deploymentTargetSelector.xml	(date 1783664143781)
+@@ -6,6 +6,14 @@
+         <option name="selectionMode" value="DROPDOWN" />
+         <DialogSelection />
+       </SelectionState>
++      <SelectionState runConfigName="UsuarioDaoTest">
++        <option name="selectionMode" value="DROPDOWN" />
++        <DialogSelection />
++      </SelectionState>
++      <SelectionState runConfigName="LoginUITest">
++        <option name="selectionMode" value="DROPDOWN" />
++        <DialogSelection />
++      </SelectionState>
+     </selectionStates>
+   </component>
+ </project>
+\ No newline at end of file
+Index: app/src/main/java/com/escudero/rokpeiperzizors/Validator.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/escudero/rokpeiperzizors/Validator.kt b/app/src/main/java/com/escudero/rokpeiperzizors/Validator.kt
+new file mode 100644
+--- /dev/null	(date 1783659531673)
++++ b/app/src/main/java/com/escudero/rokpeiperzizors/Validator.kt	(date 1783659531673)
+@@ -0,0 +1,28 @@
++package com.escudero.rokpeiperzizors
++
++object Validator {
++
++    private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")
++
++    fun validate(email: String, password: String): Pair<Boolean, String?> {
++
++        if (email.isEmpty()) {
++            return Pair(false, "El correo es obligatorio")
++        }
++
++        if (!EMAIL_REGEX.matches(email)) {
++            return Pair(false, "Correo inválido")
++        }
++
++        if (password.isEmpty()) {
++            return Pair(false, "La contraseña es obligatoria")
++        }
++
++        if (password.length < 6) {
++            return Pair(false, "Mínimo 6 caracteres")
++        }
++
++        return Pair(true, null)
++    }
++
++}
+Index: app/src/androidTest/java/com/escudero/rokpeiperzizors/LoginUITest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/androidTest/java/com/escudero/rokpeiperzizors/LoginUITest.kt b/app/src/androidTest/java/com/escudero/rokpeiperzizors/LoginUITest.kt
+new file mode 100644
+--- /dev/null	(date 1783664383200)
++++ b/app/src/androidTest/java/com/escudero/rokpeiperzizors/LoginUITest.kt	(date 1783664383200)
+@@ -0,0 +1,47 @@
++package com.escudero.rokpeiperzizors
++
++import androidx.test.ext.junit.runners.AndroidJUnit4
++import androidx.test.ext.junit.rules.ActivityScenarioRule
++import androidx.test.espresso.Espresso.onView
++import androidx.test.espresso.action.ViewActions.click
++import androidx.test.espresso.matcher.ViewMatchers.withId
++import androidx.test.espresso.matcher.ViewMatchers.withText
++import androidx.test.espresso.assertion.ViewAssertions.matches
++import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
++
++import org.junit.Rule
++import org.junit.Test
++import org.junit.runner.RunWith
++
++
++@RunWith(AndroidJUnit4::class)
++class LoginUITest {
++
++
++    @get:Rule
++    val activityRule = ActivityScenarioRule(LoginActivity::class.java)
++
++
++    @Test
++    fun loginCamposVacios_muestraErrorCorreo() {
++
++
++        // ARRANGE
++        // La pantalla LoginActivity ya se abre automáticamente
++
++
++        // ACT
++        // Presiona el botón sin llenar datos
++
++        onView(withId(R.id.btnIngresar))
++            .perform(click())
++
++
++        // ASSERT
++        // Verifica que aparece el mensaje de error
++
++        onView(withText("El correo es obligatorio"))
++            .check(matches(isDisplayed()))
++
++    }
++}
+\ No newline at end of file
+Index: app/src/androidTest/java/com/escudero/rokpeiperzizors/UsuarioDaoTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/androidTest/java/com/escudero/rokpeiperzizors/UsuarioDaoTest.kt b/app/src/androidTest/java/com/escudero/rokpeiperzizors/UsuarioDaoTest.kt
+new file mode 100644
+--- /dev/null	(date 1783663173610)
++++ b/app/src/androidTest/java/com/escudero/rokpeiperzizors/UsuarioDaoTest.kt	(date 1783663173610)
+@@ -0,0 +1,148 @@
++package com.escudero.rokpeiperzizors
++
++import android.content.Context
++import androidx.room.Room
++import androidx.test.core.app.ApplicationProvider
++import androidx.test.runner.AndroidJUnit4
++
++import junit.framework.TestCase.assertEquals
++import junit.framework.TestCase.assertNull
++import kotlinx.coroutines.runBlocking
++import org.junit.After
++import org.junit.Before
++import org.junit.Test
++import org.junit.runner.RunWith
++
++
++@RunWith(AndroidJUnit4::class)
++class UsuarioDaoTest {
++
++
++    private lateinit var database: AppDatabase
++    private lateinit var dao: UserDao
++
++
++    // ARRANGE GENERAL
++    // Se ejecuta antes de cada prueba
++    @Before
++    fun createDatabase() {
++
++        val context = ApplicationProvider.getApplicationContext<Context>()
++
++        database = Room.inMemoryDatabaseBuilder(
++            context,
++            AppDatabase::class.java
++        )
++            .allowMainThreadQueries()
++            .build()
++
++        dao = database.userDao()
++    }
++
++
++    // Se ejecuta después de cada prueba
++    @After
++    fun closeDatabase() {
++
++        database.close()
++    }
++
++
++
++    // PRUEBA 1:
++    // Insertar usuario y leerlo
++
++    @Test
++    fun insertarUsuario_yLeerUsuario_retornaDatosCorrectos() = runBlocking {
++
++
++        // ARRANGE
++        val usuario = Usuario(
++            nombre = "Juan Perez",
++            email = "juan@gmail.com",
++            password = "123456"
++        )
++
++
++        // ACT
++        dao.insertUser(usuario)
++
++        val resultado = dao.getUserByEmail("juan@gmail.com")
++
++
++        // ASSERT
++
++        assertEquals(
++            "El nombre debe coincidir",
++            "Juan Perez",
++            resultado?.nombre
++        )
++
++        assertEquals(
++            "El correo debe coincidir",
++            "juan@gmail.com",
++            resultado?.email
++        )
++
++        assertEquals(
++            "La contraseña debe coincidir",
++            "123456",
++            resultado?.password
++        )
++    }
++
++
++
++    // PRUEBA 2:
++    // Login correcto e incorrecto
++
++    @Test
++    fun login_usuarioRegistrado_retornaUsuarioOCasoIncorrectoNull() = runBlocking {
++
++
++        // ARRANGE
++
++        val usuario = Usuario(
++            nombre = "Maria",
++            email = "maria@gmail.com",
++            password = "abcdef"
++        )
++
++
++        dao.insertUser(usuario)
++
++
++
++        // ACT
++
++        val loginCorrecto = dao.login(
++            "maria@gmail.com",
++            "abcdef"
++        )
++
++
++        val loginIncorrecto = dao.login(
++            "maria@gmail.com",
++            "passwordMalo"
++        )
++
++
++
++        // ASSERT
++
++
++        assertEquals(
++            "Debe devolver el usuario correcto",
++            "Maria",
++            loginCorrecto?.nombre
++        )
++
++
++        assertNull(
++            "Credenciales incorrectas deben devolver null",
++            loginIncorrecto
++        )
++
++    }
++
++}
+\ No newline at end of file
+Index: app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<adaptive-icon xmlns:android=\"http://schemas.android.com/apk/res/android\">\r\n    <background android:drawable=\"@drawable/ic_launcher_background\" />\r\n    <foreground android:drawable=\"@drawable/ic_launcher_foreground\" />\r\n    <monochrome android:drawable=\"@drawable/ic_launcher_foreground\" />\r\n</adaptive-icon>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml b/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+--- a/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml	(date 1783796938398)
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+-    <background android:drawable="@drawable/ic_launcher_background" />
+-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
++    <background android:drawable="@drawable/ic_launcher_background"/>
++    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
++    <monochrome android:drawable="@mipmap/ic_launcher_monochrome"/>
+ </adaptive-icon>
+\ No newline at end of file
+Index: .idea/androidTestResultsUserPreferences.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/androidTestResultsUserPreferences.xml b/.idea/androidTestResultsUserPreferences.xml
+new file mode 100644
+--- /dev/null	(date 1783663978685)
++++ b/.idea/androidTestResultsUserPreferences.xml	(date 1783663978685)
+@@ -0,0 +1,35 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="AndroidTestResultsUserPreferences">
++    <option name="androidTestResultsTableState">
++      <map>
++        <entry key="-1110936581">
++          <value>
++            <AndroidTestResultsTableState>
++              <option name="preferredColumnWidths">
++                <map>
++                  <entry key="Duration" value="90" />
++                  <entry key="Tests" value="360" />
++                  <entry key="samsung SM-A235M" value="120" />
++                </map>
++              </option>
++            </AndroidTestResultsTableState>
++          </value>
++        </entry>
++        <entry key="916668492">
++          <value>
++            <AndroidTestResultsTableState>
++              <option name="preferredColumnWidths">
++                <map>
++                  <entry key="Duration" value="90" />
++                  <entry key="Tests" value="360" />
++                  <entry key="samsung SM-A235M" value="120" />
++                </map>
++              </option>
++            </AndroidTestResultsTableState>
++          </value>
++        </entry>
++      </map>
++    </option>
++  </component>
++</project>
+\ No newline at end of file
+Index: app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<adaptive-icon xmlns:android=\"http://schemas.android.com/apk/res/android\">\r\n    <background android:drawable=\"@drawable/ic_launcher_background\" />\r\n    <foreground android:drawable=\"@drawable/ic_launcher_foreground\" />\r\n    <monochrome android:drawable=\"@drawable/ic_launcher_foreground\" />\r\n</adaptive-icon>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml b/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+--- a/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml	(revision 6eba01ff62014e0802cc7417af1f85f87ed5b4fb)
++++ b/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml	(date 1783796939594)
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+-    <background android:drawable="@drawable/ic_launcher_background" />
+-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
++    <background android:drawable="@drawable/ic_launcher_background"/>
++    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
++    <monochrome android:drawable="@mipmap/ic_launcher_monochrome"/>
+ </adaptive-icon>
+\ No newline at end of file
+Index: app/src/main/java/com/escudero/rokpeiperzizors/JuegoActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/escudero/rokpeiperzizors/JuegoActivity.kt b/app/src/main/java/com/escudero/rokpeiperzizors/JuegoActivity.kt
+new file mode 100644
+--- /dev/null	(date 1783799206064)
++++ b/app/src/main/java/com/escudero/rokpeiperzizors/JuegoActivity.kt	(date 1783799206064)
+@@ -0,0 +1,189 @@
++package com.escudero.rokpeiperzizors
++
++import android.content.Intent
++import android.graphics.Color
++import android.media.MediaPlayer
++import android.os.Bundle
++import android.widget.Button
++import android.widget.TextView
++import androidx.appcompat.app.AppCompatActivity
++import kotlin.random.Random
++
++class JuegoActivity : AppCompatActivity() {
++
++    private lateinit var tvResultado: TextView
++    private lateinit var tvMarcador: TextView
++    private lateinit var tvAyuda: TextView
++
++    // Contadores
++    private var ganadas = 0
++    private var perdidas = 0
++    private var empatadas = 0
++    private var puntosJugador = 0
++    private var puntosMaquina = 0
++
++    // MediaPlayers para sonidos
++    private lateinit var mpClick: MediaPlayer
++    private lateinit var mpWin: MediaPlayer
++    private lateinit var mpLose: MediaPlayer
++    private lateinit var mpDraw: MediaPlayer
++
++    override fun onCreate(savedInstanceState: Bundle?) {
++        super.onCreate(savedInstanceState)
++        setContentView(R.layout.activity_juego)
++
++        // Inicializar sonidos
++        mpClick = MediaPlayer.create(this, R.raw.click)
++        mpWin = MediaPlayer.create(this, R.raw.win)
++        mpLose = MediaPlayer.create(this, R.raw.lose)
++        mpDraw = MediaPlayer.create(this, R.raw.draw)
++
++        tvResultado = findViewById(R.id.tvResultado)
++        tvMarcador = findViewById(R.id.tvMarcador)
++        tvAyuda = findViewById(R.id.tvAyuda)
++
++        val btnPiedra = findViewById<Button>(R.id.btnPiedra)
++        val btnPapel = findViewById<Button>(R.id.btnPapel)
++        val btnTijera = findViewById<Button>(R.id.btnTijera)
++        val btnReiniciar = findViewById<Button>(R.id.btnReiniciar)
++        val btnVolver = findViewById<Button>(R.id.btnVolver)
++
++        btnPiedra.setOnClickListener { jugar("Piedra") }
++        btnPapel.setOnClickListener { jugar("Papel") }
++        btnTijera.setOnClickListener { jugar("Tijera") }
++
++        btnReiniciar.setOnClickListener { reiniciarPartida() }
++        btnVolver.setOnClickListener { volverConResultado() }
++
++        tvAyuda.text = "👆 Toca una opción para jugar"
++    }
++
++    private fun jugar(eleccionJugador: String) {
++        tvAyuda.text = ""
++
++        val opciones = listOf("Piedra", "Papel", "Tijera")
++        val eleccionMaquina = opciones[Random.nextInt(opciones.size)]
++
++        val resultado = when {
++            eleccionJugador == eleccionMaquina -> "Empate"
++            eleccionJugador == "Piedra" && eleccionMaquina == "Tijera" -> "Ganaste"
++            eleccionJugador == "Papel" && eleccionMaquina == "Piedra" -> "Ganaste"
++            eleccionJugador == "Tijera" && eleccionMaquina == "Papel" -> "Ganaste"
++            else -> "Perdiste"
++        }
++
++        when (resultado) {
++            "Ganaste" -> {
++                puntosJugador++
++                ganadas++
++            }
++            "Perdiste" -> {
++                puntosMaquina++
++                perdidas++
++            }
++            "Empate" -> {
++                empatadas++
++            }
++        }
++
++        // Emojis
++        val emojiJugador = when (eleccionJugador) {
++            "Piedra" -> "🪨"
++            "Papel" -> "📄"
++            else -> "✂️"
++        }
++        val emojiMaquina = when (eleccionMaquina) {
++            "Piedra" -> "🪨"
++            "Papel" -> "📄"
++            else -> "✂️"
++        }
++
++        tvResultado.text = """
++            $emojiJugador  vs  $emojiMaquina
++            
++            $resultado
++        """.trimIndent()
++
++        when (resultado) {
++            "Ganaste" -> tvResultado.setTextColor(Color.parseColor("#4CAF50"))
++            "Perdiste" -> tvResultado.setTextColor(Color.parseColor("#F44336"))
++            "Empate" -> tvResultado.setTextColor(Color.parseColor("#FFC107"))
++        }
++
++        tvMarcador.text = "Jugador $puntosJugador  -  $puntosMaquina Máquina"
++
++        // 🔥 REPRODUCIR SONIDO (DETENIENDO TODOS ANTES)
++        reproducirSonido(resultado)
++    }
++
++    // 🔥 MÉTODO PARA REPRODUCIR SONIDO DETENIENDO LOS DEMÁS
++    private fun reproducirSonido(resultado: String) {
++        // Detener TODOS los sonidos antes de reproducir el nuevo
++        stopAllSounds()
++
++        // Reproducir el sonido correspondiente
++        when (resultado) {
++            "Ganaste" -> {
++                mpWin.start()
++                // Opcional: reproducir también un click al seleccionar
++
++            }
++            "Perdiste" -> {
++                mpLose.start()
++
++            }
++            "Empate" -> {
++                mpDraw.start()
++
++            }
++        }
++    }
++
++    // 🔥 DETENER TODOS LOS SONIDOS
++    private fun stopAllSounds() {
++        if (::mpClick.isInitialized && mpClick.isPlaying) mpClick.stop()
++        if (::mpWin.isInitialized && mpWin.isPlaying) mpWin.stop()
++        if (::mpLose.isInitialized && mpLose.isPlaying) mpLose.stop()
++        if (::mpDraw.isInitialized && mpDraw.isPlaying) mpDraw.stop()
++    }
++
++    private fun reiniciarPartida() {
++        puntosJugador = 0
++        puntosMaquina = 0
++        tvMarcador.text = "Jugador 0 - 0 Máquina"
++        tvResultado.text = "Elige una opción"
++        tvResultado.setTextColor(Color.WHITE)
++        tvAyuda.text = "👆 Toca una opción para jugar"
++        // Detener sonidos al reiniciar
++        stopAllSounds()
++    }
++
++    private fun volverConResultado() {
++        val intent = Intent()
++        intent.putExtra("ganadas", ganadas)
++        intent.putExtra("perdidas", perdidas)
++        intent.putExtra("empatadas", empatadas)
++        setResult(RESULT_OK, intent)
++        // Liberar recursos de sonido antes de salir
++        releaseSounds()
++        finish()
++    }
++
++    override fun onBackPressed() {
++        super.onBackPressed()
++        volverConResultado()
++    }
++
++    // 🔥 LIBERAR RECURSOS DE SONIDO
++    private fun releaseSounds() {
++        mpClick.release()
++        mpWin.release()
++        mpLose.release()
++        mpDraw.release()
++    }
++
++    override fun onDestroy() {
++        super.onDestroy()
++        releaseSounds()
++    }
++}
+\ No newline at end of file

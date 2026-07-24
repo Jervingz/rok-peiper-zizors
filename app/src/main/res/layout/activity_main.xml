@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="30dp"
+    android:background="#121212">
+
+    <!-- Título de la app -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🎮 Rok Peiper Zizors"
+        android:textSize="34sp"
+        android:textColor="#00B4D8"
+        android:textStyle="bold"
+        android:layout_marginBottom="40dp"/>
+
+    <!-- Resumen de la última partida -->
+    <TextView
+        android:id="@+id/tvResumen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Aún no has jugado"
+        android:textSize="22sp"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="30dp"/>
+
+    <!-- Botón Jugar -->
+    <Button
+        android:id="@+id/btnJugar"
+        android:layout_width="200dp"
+        android:layout_height="70dp"
+        android:text="🎯 Jugar"
+        android:textSize="24sp"
+        android:backgroundTint="#FF6D00"
+        android:textColor="#FFFFFF"/>
+
+</LinearLayout>
