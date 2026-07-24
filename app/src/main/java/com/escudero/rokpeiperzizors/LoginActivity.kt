@@ -1,124 +1,119 @@
 package com.escudero.rokpeiperzizors
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Patterns
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
+import java.util.concurrent.TimeUnit
+
 class LoginActivity : AppCompatActivity() {
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
 
     private lateinit var db: AppDatabase
     private lateinit var userDao: UserDao
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-
-                requestPermissionLauncher.launch(
-                    Manifest.permission.POST_NOTIFICATIONS
-                )
-            }
+        try {
+            setContentView(R.layout.activity_login)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error en layout: ${e.message}", Toast.LENGTH_LONG).show()
+            return
         }
 
-        // 🔹 Inicializar Room
-        db = AppDatabase.getDatabase(this)
-        userDao = db.userDao()
-
-        // 🔹 Referencias UI
-        val tilEmail = findViewById<TextInputLayout>(R.id.tilCorreo)
-        val etEmail = findViewById<TextInputEditText>(R.id.etCorreo)
-
-        val tilPassword = findViewById<TextInputLayout>(R.id.tilPassword)
-        val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
-
-        val btnLogin = findViewById<MaterialButton>(R.id.btnIngresar)
-        val tvRegistro = findViewById<TextView>(R.id.tvRegistro)
-
-        // ✅ Ir a REGISTRO (CORREGIDO)
-        tvRegistro.setOnClickListener {
-            startActivity(Intent(this, RegistroActivity::class.java))
-        }
-
-        // ✅ BOTÓN LOGIN
-        btnLogin.setOnClickListener {
-
-            val email = etEmail.text.toString().trim()
-            val password = etPassword.text.toString().trim()
-
-            // Validar inputs
-            if (!validateInputs(tilEmail, email, tilPassword, password)) {
-                return@setOnClickListener
-            }
-
-            // 🔹 Login con Room
-            lifecycleScope.launch {
-                try {
-                    val user = userDao.login(email, password)
-
-                    if (user != null) {
-
-                        // 🔥 PROGRAMAR NOTIFICACIÓN
-                        val work = androidx.work.OneTimeWorkRequestBuilder<SimpleReminderWorker>()
-                            .setInitialDelay(10, java.util.concurrent.TimeUnit.SECONDS)
-                            .build()
-
-                        androidx.work.WorkManager.getInstance(this@LoginActivity)
-                            .enqueue(work)
-
-                        Toast.makeText(
-                            this@LoginActivity,
-                            "Bienvenido ${user.nombre}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                        startActivity(
-                            Intent(this@LoginActivity, ListaUsuariosActivity::class.java)
-                        )
-                        finish()
-
-                    } else {
-                        Toast.makeText(
-                            this@LoginActivity,
-                            "Credenciales incorrectas",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-
-                } catch (e: Exception) {
-                    e.printStackTrace()
-
-                    Toast.makeText(
-                        this@LoginActivity,
-                        "Error: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+        try {
+            // Permiso de notificaciones (Android 13+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
+
+            // Inicializar Room
+            db = AppDatabase.getDatabase(this)
+            userDao = db.userDao()
+
+            val tilEmail = findViewById<TextInputLayout>(R.id.tilCorreo)
+            val etEmail = findViewById<TextInputEditText>(R.id.etCorreo)
+            val tilPassword = findViewById<TextInputLayout>(R.id.tilPassword)
+            val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
+            val btnLogin = findViewById<MaterialButton>(R.id.btnIngresar)
+            val tvRegistro = findViewById<TextView>(R.id.tvRegistro)
+
+            tvRegistro.setOnClickListener {
+                startActivity(Intent(this, RegistroActivity::class.java))
+            }
+
+            btnLogin.setOnClickListener {
+                val email = etEmail.text.toString().trim()
+                val password = etPassword.text.toString().trim()
+
+                if (!validateInputs(tilEmail, email, tilPassword, password)) {
+                    return@setOnClickListener
+                }
+
+                lifecycleScope.launch {
+                    try {
+                        val user = userDao.login(email, password)
+                        if (user != null) {
+                            val work = OneTimeWorkRequestBuilder<SimpleReminderWorker>()
+                                .setInitialDelay(10, TimeUnit.SECONDS)
+                                .build()
+                            WorkManager.getInstance(this@LoginActivity).enqueue(work)
+
+                            Toast.makeText(
+                                this@LoginActivity,
+                                "Bienvenido ${user.nombre}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                            finish()
+                        } else {
+                            Toast.makeText(
+                                this@LoginActivity,
+                                "Credenciales incorrectas",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Toast.makeText(
+                            this@LoginActivity,
+                            "Error en login: ${e.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error al inicializar: ${e.message}", Toast.LENGTH_LONG).show()
+            e.printStackTrace()
         }
     }
 
-    // 🔹 VALIDACIONES
     private fun validateInputs(
         tilEmail: TextInputLayout,
         email: String,
